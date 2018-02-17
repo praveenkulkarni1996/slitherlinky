@@ -3,6 +3,9 @@ A solver for Slitherlink (also called Loop-the-Loop) that uses SAT.
 
 
 ## About the game
+
+![Example puzzle][example_puzzle] ![Solution][example_solution]
+
 Slitherlink, also called Loop the Loop in India, (and a plethora of other names
 all over the world) is a logic puzzle. You can read more about it on
 [Wikipedia]. Because it appears in the most popular English newspaper in India,
@@ -61,3 +64,5 @@ Finish the README.  Add the code.
 
 [Wikipedia]: https://en.wikipedia.org/wiki/Slitherlink
 [Python3]: https://www.python.org/downloads/
+[example_puzzle]: assets/main.png "Example puzzle"
+[example_solution]: assets/main_solution.png "Solution"
