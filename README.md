@@ -1,6 +1,6 @@
 # slitherlinky
-A solver for Slitherlink (also called Loop-the-Loop) that uses SAT.
-
+**Slitherlinky** is a solver for slitherlink puzzles. Slitherlinky reduces a
+puzzle to a SAT problem, which is then solved by a SAT solver. 
 
 ## About the game
 
@@ -10,18 +10,13 @@ all over the world) is a logic puzzle. You can read more about it on
 [Wikipedia]. Because it appears in the most popular English newspaper in India,
 it is quite popular amongst Indians. 
 
-![Example puzzle][example_puzzle] 
-
 Slitherlink is played on a rectangular lattice of dots. Some of the squares
 formed by the dots have numbers inside them. The objective is to connect
 horizontally and vertically adjacent dots so that the lines form a simple loop
 with no loose ends. In addition, the number inside a square represents how many
 of its four sides are segments in the loop.
 
-![Solution][example_solution]
-
-**Slitherlinky** is a solver for slitherlink puzzles. Slitherlinky reduces a
-puzzle to a SAT problem, which is solved by a SAT solver. 
+![Example puzzle][example_puzzle] Solution: ![Solution][example_solution]
 
 ### SAT queries
 
@@ -46,14 +41,23 @@ There are two kinds of variables that are needed to express this problem.
   variable is true in a satisfiable solution, then there is an edge in that
   position. *Notation: e(i) represents the edge i*.
 
+  Edge variables are sufficient to express the Cell Imposed Constraints as well
+  as the Loop Constraints. In an n * n grid (the example above is a 6 x 6 grid),
+  there are **2n(n + 1)** edge variables.
+
 * **Connected Variables:** There are E * E such variables, where E is the number
   of edges. *Notation c(i, j) represents that e(i) and e(j) are connected*.
   These variables are required to express the Single Loop Constraints described
   above.
 
-  If e(i) and e(j) correspond to adjacent edges, then e(i) AND e(j) <=> c(i, j).
-  If they are not adjacent, then we need to express this recursively as follows. 
-  e(i) AND e(j) AND ((e(k1) AND c(k1, j) OR (e(k2) AND c(k2, j) ..) <=> c(i, j).
+  *If e(i) and e(j) correspond to adjacent edges, then*
+  
+  ``` e(i) AND e(j) <=> c(i, j)```
+
+  If they are not adjacent, then we need to express this recursively. Assume
+  that the k1, k2 ... are the neighbours of edge i.
+
+  ```e(i) AND e(j) AND ((e(k1) AND c(k1, j)) OR (e(k2) AND c(k2, j)) OR ..) <=> c(i, j)```
 
 ## Getting Started
 
