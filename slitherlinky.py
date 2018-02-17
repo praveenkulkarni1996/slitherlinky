@@ -1,4 +1,5 @@
 import argparse
+import pycosat
 
 
 class Slitherlinky(object):

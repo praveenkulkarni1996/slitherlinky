@@ -16,7 +16,7 @@ horizontally and vertically adjacent dots so that the lines form a simple loop
 with no loose ends. In addition, the number inside a square represents how many
 of its four sides are segments in the loop.
 
-![Example puzzle][example_puzzle] Solution: ![Solution][example_solution]
+![Example puzzle][example_puzzle] ................ ![Solution][example_solution]
 
 ### SAT queries
 
@@ -57,8 +57,10 @@ There are two kinds of variables that are needed to express this problem.
 ## Getting Started
 
 ### Prerequisites
-
-Slitherlink is written in Python3. It also requires a SAT solver. 
+Slitherlink is written in Python3. It also requires a [pycosat], a SAT solver.
+pycosat can be installed using pip or conda.
+``` pip install pycosat ```
+``` conda install pycosat ```
 
 ### Installing
 
@@ -98,4 +100,5 @@ Finish the README.  Add the code.
 [Wikipedia]: https://en.wikipedia.org/wiki/Slitherlink
 [example_puzzle]: assets/main.png "Example puzzle"
 [example_solution]: assets/main_solution.png "Solution"
-[Website]: http://www.cse.iitd.ac.in/~cs5140599/
+[Website]:http://www.cse.iitd.ac.in/~cs5140599/
+[pycosat]: https://github.com/ContinuumIO/pycosat
