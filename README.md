@@ -4,9 +4,9 @@ A solver for Slitherlink (also called Loop-the-Loop) that uses SAT.
 
 ## About the game
 
-![Example puzzle][example_puzzle] ![Solution][example_solution]
+![Example puzzle][example_puzzle]                ![Solution][example_solution]
 
-Slitherlink, also called Loop the Loop in India, (and a plethora of other names
+*Slitherlink*, also called *Loop the Loop* (and a plethora of other names
 all over the world) is a logic puzzle. You can read more about it on
 [Wikipedia]. Because it appears in the most popular English newspaper in India,
 it is quite popular amongst Indians. 
@@ -17,7 +17,7 @@ horizontally and vertically adjacent dots so that the lines form a simple loop
 with no loose ends. In addition, the number inside a square represents how many
 of its four sides are segments in the loop.
 
-*Slitherlinky* is a solver for slitherlink puzzles. Slitherlinky reduces a
+**Slitherlinky** is a solver for slitherlink puzzles. Slitherlinky reduces a
 puzzle to a SAT problem, which is solved by a SAT solver. 
 
 ## SAT queries
