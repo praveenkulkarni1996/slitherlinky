@@ -4,9 +4,10 @@ A solver for Slitherlink (also called Loop-the-Loop) that uses SAT.
 
 ## About the game
 
+### Rules
 ![Example puzzle][example_puzzle]                ![Solution][example_solution]
 
-*Slitherlink*, also called *Loop the Loop* (and a plethora of other names
+**Slitherlink**, also called **Loop the Loop** (and a plethora of other names
 all over the world) is a logic puzzle. You can read more about it on
 [Wikipedia]. Because it appears in the most popular English newspaper in India,
 it is quite popular amongst Indians. 
@@ -20,7 +21,7 @@ of its four sides are segments in the loop.
 **Slitherlinky** is a solver for slitherlink puzzles. Slitherlinky reduces a
 puzzle to a SAT problem, which is solved by a SAT solver. 
 
-## SAT queries
+### SAT queries
 
 There are three constraints in Slitherlink that need to be expressed to the SAT
 solver. The choice of boolean variables is also decided accordingly. 
@@ -36,6 +37,7 @@ solver. The choice of boolean variables is also decided accordingly.
   connected relation which is a transitive closure of the adjacency relation for
   edges.
 
+### SAT variables
 There are two kinds of variables that are needed to express this problem. 
 
 * **Edge Variables:** Every possible edge is represented by a boolean. If the
@@ -55,14 +57,24 @@ There are two kinds of variables that are needed to express this problem.
 
 ### Prerequisites
 
-Slitherlink is written in [Python3]. It also requires a SAT solver. 
+Slitherlink is written in Python3. It also requires a SAT solver. 
 
 ### Installing
+
+## Author
+
+* **Praveen Kulkarni** - to kill boredom on a dull Saturday. 
+  [Github](https://github.com/praveenkulkarni1996), [Website]
+
+## License
+
+This project is licensed under the MIT License - see the
+[LICENSE.md](LICENSE.md) file for details
 
 ### Todo
 Finish the README.  Add the code.
 
 [Wikipedia]: https://en.wikipedia.org/wiki/Slitherlink
-[Python3]: https://www.python.org/downloads/
 [example_puzzle]: assets/main.png "Example puzzle"
 [example_solution]: assets/main_solution.png "Solution"
+[Website]: http://www.cse.iitd.ac.in/~cs5140599/
