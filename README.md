@@ -5,18 +5,20 @@ A solver for Slitherlink (also called Loop-the-Loop) that uses SAT.
 ## About the game
 
 ### Rules
-![Example puzzle][example_puzzle]                ![Solution][example_solution]
-
 **Slitherlink**, also called **Loop the Loop** (and a plethora of other names
 all over the world) is a logic puzzle. You can read more about it on
 [Wikipedia]. Because it appears in the most popular English newspaper in India,
 it is quite popular amongst Indians. 
+
+![Example puzzle][example_puzzle] 
 
 Slitherlink is played on a rectangular lattice of dots. Some of the squares
 formed by the dots have numbers inside them. The objective is to connect
 horizontally and vertically adjacent dots so that the lines form a simple loop
 with no loose ends. In addition, the number inside a square represents how many
 of its four sides are segments in the loop.
+
+![Solution][example_solution]
 
 **Slitherlinky** is a solver for slitherlink puzzles. Slitherlinky reduces a
 puzzle to a SAT problem, which is solved by a SAT solver. 
@@ -60,6 +62,27 @@ There are two kinds of variables that are needed to express this problem.
 Slitherlink is written in Python3. It also requires a SAT solver. 
 
 ### Installing
+
+
+## Running the tests
+
+Explain how to run the automated tests for this system
+
+### Break down into end to end tests
+
+Explain what these tests test and why
+
+```
+Give an example
+```
+
+### And coding style tests
+
+Explain what these tests test and why
+
+```
+Give an example
+```
 
 ## Author
 
