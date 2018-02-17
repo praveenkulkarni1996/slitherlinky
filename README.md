@@ -39,24 +39,19 @@ There are two kinds of variables that are needed to express this problem.
 
 * **Edge Variables:** Every possible edge is represented by a boolean. If the
   variable is true in a satisfiable solution, then there is an edge in that
-  position. *Notation: e(i) represents the edge i*.
-
+  position. 
   Edge variables are sufficient to express the Cell Imposed Constraints as well
   as the Loop Constraints. In an n * n grid (the example above is a 6 x 6 grid),
-  there are **2n(n + 1)** edge variables.
+  there are **2n(n + 1)** edge variables.  *Notation: e(i) represents the edge i*.
 
 * **Connected Variables:** There are E * E such variables, where E is the number
   of edges. *Notation c(i, j) represents that e(i) and e(j) are connected*.
   These variables are required to express the Single Loop Constraints described
   above.
-
-  *If e(i) and e(j) correspond to adjacent edges, then*
-  
+  * If e(i) and e(j) correspond to adjacent edges, then
   ``` e(i) AND e(j) <=> c(i, j)```
-
-  If they are not adjacent, then we need to express this recursively. Assume
+  * If they are not adjacent, then we need to express this recursively. Assume
   that the k1, k2 ... are the neighbours of edge i.
-
   ```e(i) AND e(j) AND ((e(k1) AND c(k1, j)) OR (e(k2) AND c(k2, j)) OR ..) <=> c(i, j)```
 
 ## Getting Started
@@ -90,8 +85,7 @@ Give an example
 
 ## Author
 
-* **Praveen Kulkarni** - to kill boredom on a dull Saturday. 
-  [Github](https://github.com/praveenkulkarni1996), [Website]
+I wrote this to kill boredom on a dull Saturday. [Website]
 
 ## License
 
