@@ -23,6 +23,7 @@ class Slitherlinky(object):
         self.loop_constriants = []
         self.single_loop_constraints = []
 
+
     def read_puzzle(self, filename):
         """ reads a puzzle from a file """
         self.cells = [[3, 3]] #TODO: read from file instead of the mockup
@@ -37,7 +38,20 @@ class Slitherlinky(object):
         variables only.
         This updates the self.cell_constraints, and has no other side effects.
         """
-        pass
+        def zero(e1, e2, e3, e4):
+            return [[-e1], [-e2], [-e3], [-e4]]
+
+        def one(e1, e2, e3, e4):
+            return [[-e1, -e2], [-e1, -e3], [-e1, -e4],
+                    [-e2, -e3], [-e2, -e4], [-e3, -e4]]
+
+        def two(e1, e2, e3, e4):
+            return [[]] #FIXME
+
+        def three(e1, e2, e3, e4):
+            return [[e1, e2], [e1, e3], [e1, e4],
+                    [e2, e3], [e2, e4], [e3, e4]]
+
 
     def generate_loop_constraints(self):
         """
@@ -111,7 +125,9 @@ class Slitherlinky(object):
             up_edge = H + corner_id - (width + 1)
         if row < self.height:
             down_edge = H + corner_id
-        edges = [edge for edge in [left_edge, right_edge, up_edge, down_edge] if edge]
+        edges = [edge
+                 for edge in [left_edge, right_edge, up_edge, down_edge]
+                 if edge]
         return edges
 
     def get_adjacent_edges(self, edge_id):
@@ -122,10 +138,16 @@ class Slitherlinky(object):
         a, b = None
         for corner_id in range(n):
             if edge_id in self.get_corner_edges(corner_id):
-                if a == None:       a = corner_id
-                if a != corner_id:  b = corner_id
-        edges_a = [edge for edge in self.get_corner_edges(a) if edge != edge_id]
-        edges_b = [edge for edge in self.get_corner_edges(b) if edge != edge_id]
+                if a == None:
+                    a = corner_id
+                else:
+                    b = corner_id
+        edges_a = [edge
+                   for edge in self.get_corner_edges(a)
+                   if edge != edge_id]
+        edges_b = [edge
+                   for edge in self.get_corner_edges(b)
+                   if edge != edge_id]
         return edges_a + edges_b
 
     def solve(self, input_filename=None):
