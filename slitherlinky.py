@@ -1,3 +1,13 @@
+"""
+
+Author:     Praveen Kulkarni
+Email:      praveenkulkarni1996@gmail.com
+Website:    https://www.cse.iitd.ac.in/~cs5140599
+File:       slitherlinky.py
+Project:    slitherlinky
+License:    MIT
+
+"""
 import argparse
 import pycosat
 
@@ -15,9 +25,9 @@ class Slitherlinky(object):
 
     def read_puzzle(self, filename):
         """ reads a puzzle from a file """
-        self.cells = None
-        self.height = None
-        self.width = None
+        self.cells = [[3, 3]] #TODO: read from file instead of the mockup
+        self.width = 2
+        self.height = 1
 
     def generate_cell_constraints(self):
         """
@@ -67,7 +77,18 @@ class Slitherlinky(object):
         Returns a list of four integers corresponding to the edges around a
         cell.
         """
-        pass
+        assert 0 <= cell_id < (self.height * self.width)
+        # precomputation
+        cell_row = int(cell_id / self.width)
+        cell_col = cell_id % self.width
+        num_horizontal = self.width * (self.height + 1)
+        # horizontal edges
+        upper_edge = cell_id
+        lower_edge = upper_edge + self.width
+        # vertical edges
+        left_edge = num_horizontal + ((cell_row * self.width) + cell_col)
+        right_edge = left_edge + 1
+        return [upper_edge, lower_edge, left_edge, right_edge]
 
     def get_corner_edges(self, corner_id):
         """
@@ -75,13 +96,37 @@ class Slitherlinky(object):
         around a cell. The corners are numbered in ascending order from the
         top-left to the bottom-right.
         """
-        pass
+        row = corner_id % (self.width + 1)
+        col = corner_id % (self.width + 1)
+        lt_edge = None
+        rt_edge = None
+        up_edge = None
+        dn_edge = None
+        H = self.width * (self.height + 1)
+        if col < self.width:
+            right_edge = (self.width * row) + col
+        if col > 0:
+            left_edge = (self.width * row) + col - 1
+        if row > 0:
+            up_edge = H + corner_id - (width + 1)
+        if row < self.height:
+            down_edge = H + corner_id
+        edges = [edge for edge in [left_edge, right_edge, up_edge, down_edge] if edge]
+        return edges
 
     def get_adjacent_edges(self, edge_id):
         """
         Returns a list of upto 6 edges that are adjacent to edge_id.
         """
-        pass
+        n = self.width * self.height
+        a, b = None
+        for corner_id in range(n):
+            if edge_id in self.get_corner_edges(corner_id):
+                if a == None:       a = corner_id
+                if a != corner_id:  b = corner_id
+        edges_a = [edge for edge in self.get_corner_edges(a) if edge != edge_id]
+        edges_b = [edge for edge in self.get_corner_edges(b) if edge != edge_id]
+        return edges_a + edges_b
 
     def solve(self, input_filename=None):
         """ Runs solution pipeline. """
