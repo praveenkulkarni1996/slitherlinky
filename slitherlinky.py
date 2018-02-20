@@ -18,7 +18,7 @@ class Slitherlinky(object):
         self.height = None
         self.width = None
         self.cell_constraints = []
-        self.loop_constriants = []
+        self.loop_constraints = []
         self.single_loop_constraints = []
 
     def read_puzzle(self, filename):
@@ -84,7 +84,6 @@ class Slitherlinky(object):
                     clauses = cnf_builder[cell_value](e1, e2, e3, e4)
                     self.cell_constraints += clauses
                 cell_id += 1
-        print(self.cell_constraints)
 
     def generate_loop_constraints(self):
         """
@@ -93,19 +92,21 @@ class Slitherlinky(object):
         These can be expressed using the edge variables only.
         This updates the self.loop_constriants, and has no other side effects.
         """
+
         def two(e1, e2):
             """
             If there are only two edges at a corner, then either both edges are
             true, or both aren't. One edge implies the other.
             """
-            return [[-e1, e2], [e1, -e2]
+            return [[-e1, e2], [e1, -e2]]
+
 
         def three(e1, e2, e3):
             """
             If there are three edges at a corner, then exactly two of them are
             true, or none of them are.
-            e1, e2 -> -e3
-            e1 -> e2 + e3; e2 -> e1 + e3; e3 -> e1 + e2
+            * Having two edges implies the other isn't.
+            * Having one of the edges implies one of the other is. 
             """
             return [[-e1, -e2, -e3],
                     [-e1, e2, e3], 
@@ -116,10 +117,24 @@ class Slitherlinky(object):
             """
             If there are four edges at a corner, then exactly two of them are
             true, or none of them are. 
+            * Having one edge implies one of the other is an edge. 
+            * Having two edges imples the other two aren't an edge. 
             """
-            pass
+            return [[-e1, e2, e3, e4],
+                    [e1, -e2, e3, e4],
+                    [e1, e2, -e3, e4],
+                    [e1, e2, e3, -e4],
+                    [-e1, -e2, -e3],
+                    [-e1, -e2, -e4],
+                    [-e1, -e3, -e4],
+                    [-e2, -e3, -e4]]
 
-        pass
+        num_corners = (self.width + 1) * (self.height + 1)
+        constraint_fn = [None, None, two, three, four]
+        for corner_id in range(num_corners):
+            edges = [1+e for e in self.get_corner_edges(corner_id)]
+            clauses = constraint_fn[len(edges)](*edges)
+            self.loop_constraints += clauses
 
     def generate_single_loop_constraints(self):
         """
@@ -136,9 +151,9 @@ class Slitherlinky(object):
         """
         Moves the variables and constraints to the SAT solver.
         """
-        print(self.cell_constraints)
-        print(pycosat.solve(self.cell_constraints))
-        pass
+        constraints = self.cell_constraints + self.loop_constraints
+        for solution in pycosat.itersolve(constraints):
+            print('solution = ', solution)
 
     def interpret_solution(self):
         """
@@ -171,24 +186,25 @@ class Slitherlinky(object):
         around a cell. The corners are numbered in ascending order from the
         top-left to the bottom-right.
         """
-        row = corner_id % (self.width + 1)
+        assert 0 <= corner_id < (self.width + 1) * (self.height + 1)
         col = corner_id % (self.width + 1)
-        lt_edge = None
-        rt_edge = None
+        row = int(corner_id / (self.width + 1))
+        left_edge = None
+        right_edge = None
         up_edge = None
-        dn_edge = None
+        down_edge = None
         H = self.width * (self.height + 1)
         if col < self.width:
             right_edge = (self.width * row) + col
         if col > 0:
             left_edge = (self.width * row) + col - 1
         if row > 0:
-            up_edge = H + corner_id - (width + 1)
+            up_edge = H + corner_id - (self.width + 1)
         if row < self.height:
             down_edge = H + corner_id
         edges = [edge
                  for edge in [left_edge, right_edge, up_edge, down_edge]
-                 if edge]
+                 if edge is not None]
         return edges
 
     def get_adjacent_edges(self, edge_id):
