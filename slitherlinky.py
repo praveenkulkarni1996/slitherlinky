@@ -1,16 +1,14 @@
 """
-
 Author:     Praveen Kulkarni
 Email:      praveenkulkarni1996@gmail.com
 Website:    https://www.cse.iitd.ac.in/~cs5140599
 File:       slitherlinky.py
 Project:    slitherlinky
 License:    MIT
-
 """
+
 import argparse
 import pycosat
-
 
 class Slitherlinky(object):
     """ Describes a puzzle and any partial solutions """
@@ -22,7 +20,6 @@ class Slitherlinky(object):
         self.cell_constraints = []
         self.loop_constriants = []
         self.single_loop_constraints = []
-
 
     def read_puzzle(self, filename):
         """ reads a puzzle from a file """
@@ -96,6 +93,32 @@ class Slitherlinky(object):
         These can be expressed using the edge variables only.
         This updates the self.loop_constriants, and has no other side effects.
         """
+        def two(e1, e2):
+            """
+            If there are only two edges at a corner, then either both edges are
+            true, or both aren't. One edge implies the other.
+            """
+            return [[-e1, e2], [e1, -e2]
+
+        def three(e1, e2, e3):
+            """
+            If there are three edges at a corner, then exactly two of them are
+            true, or none of them are.
+            e1, e2 -> -e3
+            e1 -> e2 + e3; e2 -> e1 + e3; e3 -> e1 + e2
+            """
+            return [[-e1, -e2, -e3],
+                    [-e1, e2, e3], 
+                    [e1, -e2, e3],
+                    [e1, e2, -e3]]
+
+        def four(e1, e2, e3, e4):
+            """
+            If there are four edges at a corner, then exactly two of them are
+            true, or none of them are. 
+            """
+            pass
+
         pass
 
     def generate_single_loop_constraints(self):
