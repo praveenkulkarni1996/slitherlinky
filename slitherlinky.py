@@ -39,19 +39,55 @@ class Slitherlinky(object):
         This updates the self.cell_constraints, and has no other side effects.
         """
         def zero(e1, e2, e3, e4):
+            """ 
+            All e1, e2, e3 and e4 must be false.
+            """
             return [[-e1], [-e2], [-e3], [-e4]]
 
         def one(e1, e2, e3, e4):
+            """
+            Amongst any two of booleans, at least one must be false. This
+            ensures that atmost one of the booleans is true. 
+            Also add a clause that ensures at least one of the booleans is true.
+            Together they ensure the "exactly one constraint".
+            """
             return [[-e1, -e2], [-e1, -e3], [-e1, -e4],
-                    [-e2, -e3], [-e2, -e4], [-e3, -e4]]
+                    [-e2, -e3], [-e2, -e4], [-e3, -e4], 
+                    [e1, e2, e3, e4]]
 
         def two(e1, e2, e3, e4):
-            return [[]] #FIXME
+            """
+            Amongst any three booleans, at least one must be true, 
+            and atleast one must be false.
+            """
+            return [[e2, e3, e4], [e1, e3, e4], 
+                    [e1, e2, e4], [e1, e2, e3],
+                    [-e2, -e3, -e4], [-e1, -e3, -e4], 
+                    [-e1, -e2, -e4], [-e1, -e2, -e3]] 
 
         def three(e1, e2, e3, e4):
+            """
+            Amongst any two booleans, at least one must be true. This ensures
+            that there are at least three true booleans. 
+            Also add a clause that ensures at least one of them must be false.
+            Together they ensure the "exactly three correct"
+            """
             return [[e1, e2], [e1, e3], [e1, e4],
-                    [e2, e3], [e2, e4], [e3, e4]]
+                    [e2, e3], [e2, e4], [e3, e4], 
+                    [-e1, -e2, -e3, -e4]]
 
+        self.cell_constraints = []
+        cnf_builder = [zero, one, two, three]
+        cell_id = 0
+        for row in range(self.height):
+            for col in range(self.width):
+                cell_value = self.cells[row][col]
+                if 0 <= cell_value <= 3:
+                    e1, e2, e3, e4 = [1+e for e in self.get_cell_edges(cell_id)]
+                    clauses = cnf_builder[cell_value](e1, e2, e3, e4)
+                    self.cell_constraints += clauses
+                cell_id += 1
+        print(self.cell_constraints)
 
     def generate_loop_constraints(self):
         """
@@ -77,6 +113,8 @@ class Slitherlinky(object):
         """
         Moves the variables and constraints to the SAT solver.
         """
+        print(self.cell_constraints)
+        print(pycosat.solve(self.cell_constraints))
         pass
 
     def interpret_solution(self):
