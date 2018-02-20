@@ -19,9 +19,9 @@ class Slitherlinky(object):
         self.cells = None
         self.height = None
         self.width = None
+        self.num_edges = None
         self.cell_constraints = []
         self.loop_constraints = []
-        self.single_loop_constraints = []
 
     def read_puzzle(self, filename):
         """ reads a puzzle from a file """
@@ -31,6 +31,7 @@ class Slitherlinky(object):
                            for line in fin]
         self.width = len(self.cells[0])
         self.height = len(self.cells)
+        self.num_edges = 2*self.width*self.height + self.width + self.height
         pprint.pprint(self.cells)
         print()
 
@@ -46,7 +47,7 @@ class Slitherlinky(object):
             """ 
             All e1, e2, e3 and e4 must be false.
             """
-            logging.debug('zero_constraint({}, {}, {}, {})'.format(e1, e2, e3, e4))
+            logging.debug('zero({}, {}, {}, {})'.format(e1, e2, e3, e4))
             return [[-e1], [-e2], [-e3], [-e4]]
 
         def one(e1, e2, e3, e4):
@@ -151,69 +152,12 @@ class Slitherlinky(object):
             clauses = constraint_fn[len(edges)](*edges)
             self.loop_constraints += clauses
 
-    def generate_single_loop_constraints(self):
-        """
-        Ensures that the solution consists of a single loop only. This requires
-        the use of connected variables.  The connected predicate is defined
-        recursively.  Two edges are connected iff
-        1) they are adjacent
-        2), or if any of the adjacent edges are adjacent
-        This function updates the self.single_loop_constriants.
-        """
-        def adjacent_clauses(e1, e2, c12):
-            """ 
-            c12 is the connected variable, which is defined as below:
-            * If e1 and e2 are true then it implies c12.
-            * If the c12 is true then it implies e1 and e2.
-            """
-            return [[-e1, -e2, c12], [-c12, e1], [-c12, e2]]
-
-        def non_adjacent_clause(e1, e2, c12, adj_c):
-            """
-            e1 : source edge present ?
-            e2 : destination edge present ?
-            c12 : e1 and e2 are connected ?
-            adj_c: List of c(1, j) where e1 and ej are neighbours.
-
-            The recursive definition of c12 can be split into two sets of
-            clauses - forward and backward clauses.
-            * Forward clauses ensure that if a neighbour of e1 is connected to
-              e2, and if edge e1 and e2 exist, then e1 is connected to e2.
-            * Backward clauses ensure that if e1 is connected to e2, then both 
-              e1 and e2 are present, and atleast one of the neighbours of e1 is
-              also connected.
-            """
-            forward_clauses = [[-nc, -e1, -e2, c12] for nc in adj_c]
-            backward_clauses = [[-c12, e1], [-c12, e2], [-c12] + adj_c]
-            return forward_clauses + backward_clauses
-
-        def get_c(edge1, edge2):
-            return num_edges + 1 + c_vars.index((edge1, edge2))
-
-        num_edges = (2 * self.width * self.height) + self.width + self.height
-
-        c_vars = sorted([(a, b) 
-                  for a in range(num_edges)
-                  for b in range(num_edges)
-                  if a != b])
-
-        for e1 in range(num_edges):
-            adj = self.get_adjacent_edges(e1)
-            adj_c = [get_c(e1, e2) for e2 in adj]
-            for e2 in range(num_edges):
-                if e1 != e2:
-                    c12 = get_c(e1, e2)
-                    if e2 in adj:
-                        clauses = adjacent_clauses(e1+1, e2+1, c12) 
-                    else:
-                        clauses = non_adjacent_clause(e1+1, e2+1, c12, adj_c)
-                    self.single_loop_constraints += clauses
 
     def call_sat_solver(self):
         """
         Moves the variables and constraints to the SAT solver.
         """
-        constraints = self.cell_constraints + self.loop_constraints + self.single_loop_constraints
+        constraints = self.cell_constraints + self.loop_constraints
         self.solution = pycosat.solve(constraints)
 
     def interpret_solution(self):
@@ -226,43 +170,9 @@ class Slitherlinky(object):
         num_edges = num_vert_edges + num_hori_edges
         hori_edges = self.solution[:num_hori_edges]
         vert_edges = self.solution[num_hori_edges:num_edges]
-
         print(list(filter(lambda x: x > 0, hori_edges)))
         print(list(filter(lambda x: x > 0, vert_edges)))
-        exit()
-        H = 2 * (self.height + 1) + 1
-        W = 2 * (self.width + 1) + 1
-        outputs = [[' ' for _ in range(W)] for _ in range(H)]
-        pprint.pprint(outputs)
 
-        for row in range(self.height + 1):
-            print(row)
-            start_slice = row * (self.width + 1)
-            end_slice = (row + 1) * (self.width + 1)
-            solution_row = hori_edges[start_slice:end_slice]
-            for pos, value in enumerate(solution_row):
-                if value > 0:
-                    outputs[row * 2][pos*2 + 0] = '.'
-                    outputs[row * 2][pos*2 + 1] = '-'
-                    outputs[row * 2][pos*2 + 2] = '.'
-
-        for col in range(self.width + 1):
-            start_slice = col * (self.height + 1)
-            end_slice = (col + 1) * (self.height + 1)
-            solution_col = vert_edges[start_slice:end_slice]
-            for pos, value in enumerate(solution_col):
-                if value > 0:
-                    outputs[pos*2 + 0][col * 2] = '.'
-                    outputs[pos*2 + 1][col * 2] = '|'
-                    outputs[pos*2 + 2][col * 2] = '.'
-        for line in outputs:
-            print(''.join(line))
-        # pprint.pprint(outputs)
-        exit()
-
-        print(hori_edges)
-        print(vert_edges)
-        # print(list(filter(lambda x: x > 0, self.solution[:num_edges])))
 
     def get_cell_edges(self, cell_id):
         """
@@ -291,7 +201,7 @@ class Slitherlinky(object):
         """
         assert 0 <= corner_id < (self.width + 1) * (self.height + 1)
         col = corner_id % (self.width + 1)
-        row = int(corner_id / (self.width + 1))
+        row = corner_id // (self.width + 1)
         left_edge = None
         right_edge = None
         up_edge = None
@@ -335,7 +245,6 @@ class Slitherlinky(object):
         self.read_puzzle(filename=input_filename)
         self.generate_cell_constraints()
         self.generate_loop_constraints()
-        self.generate_single_loop_constraints()
         self.call_sat_solver()
         self.interpret_solution()
 
