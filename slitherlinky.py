@@ -9,6 +9,7 @@ License:    MIT
 
 import argparse
 import pycosat
+import pprint
 
 class Slitherlinky(object):
     """ Describes a puzzle and any partial solutions """
@@ -23,10 +24,12 @@ class Slitherlinky(object):
 
     def read_puzzle(self, filename):
         """ reads a puzzle from a file """
-        self.cells = [[3, 3]] #TODO: read from file instead of the mockup
-        self.width = 2
-        self.height = 1
-
+        with open(filename) as fin:
+            self.cells = [[None if char == '.' else int(char)
+                           for char in line.strip()]
+                           for line in fin]
+        self.width = len(self.cells[0])
+        self.height = len(self.cells)
 
     def generate_cell_constraints(self):
         """
@@ -80,7 +83,9 @@ class Slitherlinky(object):
         for row in range(self.height):
             for col in range(self.width):
                 cell_value = self.cells[row][col]
-                if 0 <= cell_value <= 3:
+                if cell_value is None:
+                    pass
+                else:
                     e1, e2, e3, e4 = [1+e for e in self.get_cell_edges(cell_id)]
                     clauses = cnf_builder[cell_value](e1, e2, e3, e4)
                     self.cell_constraints += clauses
@@ -146,7 +151,6 @@ class Slitherlinky(object):
         2), or if any of the adjacent edges are adjacent
         This function updates the self.single_loop_constriants.
         """
-
         def adjacent_clauses(e1, e2, c12):
             """ 
             c12 is the connected variable, which is defined as below:
@@ -164,39 +168,92 @@ class Slitherlinky(object):
 
             The recursive definition of c12 can be split into two sets of
             clauses - forward and backward clauses.
-
-            Forward clauses ensure that if a neighbour of e1 is connected to e2,
-            and if edge e1 and e2 exist, then e1 is connected to e2.
-
-            Backward clauses ensure that if e1 is connected to e2, then both e1
-            and e2 are present, and atleast one of the neighbours of e1 is also
-            connected.
+            * Forward clauses ensure that if a neighbour of e1 is connected to
+              e2, and if edge e1 and e2 exist, then e1 is connected to e2.
+            * Backward clauses ensure that if e1 is connected to e2, then both 
+              e1 and e2 are present, and atleast one of the neighbours of e1 is
+              also connected.
             """
             forward_clauses = [[-nc, -e1, -e2, c12] for nc in adj_c]
             backward_clauses = [[-c12, e1], [-c12, e2], [-c12] + adj_c]
             return forward_clauses + backward_clauses
 
+        def get_c(edge1, edge2):
+            return num_edges + 1 + c_vars.index((edge1, edge2))
+
         num_edges = (2 * self.width * self.height) + self.width + self.height
-        for edge in range(num_edges):
-            adj = [e+1 for e in self.get_adjacent_edges(edge)]
-            
-            
+
+        c_vars = sorted([(a, b) 
+                  for a in range(num_edges)
+                  for b in range(num_edges)
+                  if a != b])
+
+        for e1 in range(num_edges):
+            adj = self.get_adjacent_edges(e1)
+            adj_c = [get_c(e1, e2) for e2 in adj]
+            for e2 in range(num_edges):
+                if e1 != e2:
+                    c12 = get_c(e1, e2)
+                    if e2 in adj:
+                        clauses = adjacent_clauses(e1+1, e2+1, c12) 
+                    else:
+                        clauses = non_adjacent_clause(e1+1, e2+1, c12, adj_c)
+                    self.single_loop_constraints += clauses
 
     def call_sat_solver(self):
         """
         Moves the variables and constraints to the SAT solver.
         """
-        constraints = self.cell_constraints 
-                      + self.loop_constraints
-        for solution in pycosat.itersolve(constraints):
-            print('solution = ', solution)
+        constraints = self.cell_constraints + self.loop_constraints + self.single_loop_constraints
+        self.solution = pycosat.solve(constraints)
 
     def interpret_solution(self):
         """
         Interprets the SAT output (= boolean variables) and generates a
         solution.
         """
-        raise NotImplemented("None of the functions are ready")
+        num_hori_edges = self.width * (self.height + 1)
+        num_vert_edges = self.height * (self.width + 1) 
+        num_edges = num_vert_edges + num_hori_edges
+        hori_edges = self.solution[:num_hori_edges]
+        vert_edges = self.solution[num_hori_edges:num_edges]
+
+        print(list(filter(lambda x: x > 0, hori_edges)))
+        print(list(filter(lambda x: x > 0, vert_edges)))
+        exit()
+        H = 2 * (self.height + 1) + 1
+        W = 2 * (self.width + 1) + 1
+        outputs = [[' ' for _ in range(W)] for _ in range(H)]
+        pprint.pprint(outputs)
+
+        for row in range(self.height + 1):
+            print(row)
+            start_slice = row * (self.width + 1)
+            end_slice = (row + 1) * (self.width + 1)
+            solution_row = hori_edges[start_slice:end_slice]
+            for pos, value in enumerate(solution_row):
+                if value > 0:
+                    outputs[row * 2][pos*2 + 0] = '.'
+                    outputs[row * 2][pos*2 + 1] = '-'
+                    outputs[row * 2][pos*2 + 2] = '.'
+
+        for col in range(self.width + 1):
+            start_slice = col * (self.height + 1)
+            end_slice = (col + 1) * (self.height + 1)
+            solution_col = vert_edges[start_slice:end_slice]
+            for pos, value in enumerate(solution_col):
+                if value > 0:
+                    outputs[pos*2 + 0][col * 2] = '.'
+                    outputs[pos*2 + 1][col * 2] = '|'
+                    outputs[pos*2 + 2][col * 2] = '.'
+        for line in outputs:
+            print(''.join(line))
+        # pprint.pprint(outputs)
+        exit()
+
+        print(hori_edges)
+        print(vert_edges)
+        # print(list(filter(lambda x: x > 0, self.solution[:num_edges])))
 
     def get_cell_edges(self, cell_id):
         """
@@ -248,14 +305,14 @@ class Slitherlinky(object):
         """
         Returns a list of upto 6 edges that are adjacent to edge_id.
         """
-        n = self.width * self.height
-        a, b = None
-        for corner_id in range(n):
-            if edge_id in self.get_corner_edges(corner_id):
-                if a == None:
-                    a = corner_id
-                else:
-                    b = corner_id
+        vert_edges = self.height * (self.width + 1) 
+        hori_edges = self.width * (self.height + 1)
+        num_edges = vert_edges + hori_edges
+        num_corners = (self.width + 1) * (self.height + 1)
+        assert 0 <= edge_id < num_edges
+        a, b = [corner_id
+                for corner_id in range(num_corners)
+                if edge_id in self.get_corner_edges(corner_id)]
         edges_a = [edge
                    for edge in self.get_corner_edges(a)
                    if edge != edge_id]
@@ -276,4 +333,4 @@ class Slitherlinky(object):
 
 if __name__ == '__main__':
     slither = Slitherlinky()
-    slither.solve()
+    slither.solve(input_filename='tests/mod1.txt')
