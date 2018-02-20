@@ -155,9 +155,26 @@ class Slitherlinky(object):
             """
             return [[-e1, -e2, c12], [-c12, e1], [-c12, e2]]
 
-        def non_adjacent_clause(e1, *args, **kwargs):
-            # FIXME
-            pass
+        def non_adjacent_clause(e1, e2, c12, adj_c):
+            """
+            e1 : source edge present ?
+            e2 : destination edge present ?
+            c12 : e1 and e2 are connected ?
+            adj_c: List of c(1, j) where e1 and ej are neighbours.
+
+            The recursive definition of c12 can be split into two sets of
+            clauses - forward and backward clauses.
+
+            Forward clauses ensure that if a neighbour of e1 is connected to e2,
+            and if edge e1 and e2 exist, then e1 is connected to e2.
+
+            Backward clauses ensure that if e1 is connected to e2, then both e1
+            and e2 are present, and atleast one of the neighbours of e1 is also
+            connected.
+            """
+            forward_clauses = [[-nc, -e1, -e2, c12] for nc in adj_c]
+            backward_clauses = [[-c12, e1], [-c12, e2], [-c12] + adj_c]
+            return forward_clauses + backward_clauses
 
         num_edges = (2 * self.width * self.height) + self.width + self.height
         for edge in range(num_edges):
