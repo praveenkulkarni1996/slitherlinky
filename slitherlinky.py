@@ -27,6 +27,7 @@ class Slitherlinky(object):
         self.width = 2
         self.height = 1
 
+
     def generate_cell_constraints(self):
         """
         The cell constraints correspond to the main objective of the game where
@@ -145,13 +146,31 @@ class Slitherlinky(object):
         2), or if any of the adjacent edges are adjacent
         This function updates the self.single_loop_constriants.
         """
-        pass
+
+        def adjacent_clauses(e1, e2, c12):
+            """ 
+            c12 is the connected variable, which is defined as below:
+            * If e1 and e2 are true then it implies c12.
+            * If the c12 is true then it implies e1 and e2.
+            """
+            return [[-e1, -e2, c12], [-c12, e1], [-c12, e2]]
+
+        def non_adjacent_clause(e1, *args, **kwargs):
+            # FIXME
+            pass
+
+        num_edges = (2 * self.width * self.height) + self.width + self.height
+        for edge in range(num_edges):
+            adj = [e+1 for e in self.get_adjacent_edges(edge)]
+            
+            
 
     def call_sat_solver(self):
         """
         Moves the variables and constraints to the SAT solver.
         """
-        constraints = self.cell_constraints + self.loop_constraints
+        constraints = self.cell_constraints 
+                      + self.loop_constraints
         for solution in pycosat.itersolve(constraints):
             print('solution = ', solution)
 
@@ -160,7 +179,7 @@ class Slitherlinky(object):
         Interprets the SAT output (= boolean variables) and generates a
         solution.
         """
-        pass
+        raise NotImplemented("None of the functions are ready")
 
     def get_cell_edges(self, cell_id):
         """
@@ -179,6 +198,7 @@ class Slitherlinky(object):
         left_edge = num_horizontal + ((cell_row * self.width) + cell_col)
         right_edge = left_edge + 1
         return [upper_edge, lower_edge, left_edge, right_edge]
+
 
     def get_corner_edges(self, corner_id):
         """
@@ -235,7 +255,6 @@ class Slitherlinky(object):
         self.generate_single_loop_constraints()
         self.call_sat_solver()
         self.interpret_solution()
-        raise NotImplemented("None of the functions are ready")
 
 
 if __name__ == '__main__':
