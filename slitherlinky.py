@@ -10,6 +10,7 @@ License:    MIT
 import argparse
 import pycosat
 import pprint
+import logging
 
 class Slitherlinky(object):
     """ Describes a puzzle and any partial solutions """
@@ -30,6 +31,8 @@ class Slitherlinky(object):
                            for line in fin]
         self.width = len(self.cells[0])
         self.height = len(self.cells)
+        pprint.pprint(self.cells)
+        print()
 
     def generate_cell_constraints(self):
         """
@@ -43,6 +46,7 @@ class Slitherlinky(object):
             """ 
             All e1, e2, e3 and e4 must be false.
             """
+            logging.debug('zero_constraint({}, {}, {}, {})'.format(e1, e2, e3, e4))
             return [[-e1], [-e2], [-e3], [-e4]]
 
         def one(e1, e2, e3, e4):
@@ -52,6 +56,7 @@ class Slitherlinky(object):
             Also add a clause that ensures at least one of the booleans is true.
             Together they ensure the "exactly one constraint".
             """
+            logging.debug('one({}, {}, {}, {})'.format(e1, e2, e3, e4))
             return [[-e1, -e2], [-e1, -e3], [-e1, -e4],
                     [-e2, -e3], [-e2, -e4], [-e3, -e4], 
                     [e1, e2, e3, e4]]
@@ -61,6 +66,7 @@ class Slitherlinky(object):
             Amongst any three booleans, at least one must be true, 
             and atleast one must be false.
             """
+            logging.debug('two({}, {}, {}, {})'.format(e1, e2, e3, e4))
             return [[e2, e3, e4], [e1, e3, e4], 
                     [e1, e2, e4], [e1, e2, e3],
                     [-e2, -e3, -e4], [-e1, -e3, -e4], 
@@ -73,23 +79,26 @@ class Slitherlinky(object):
             Also add a clause that ensures at least one of them must be false.
             Together they ensure the "exactly three correct"
             """
+            logging.debug('three({}, {}, {}, {})'.format(e1, e2, e3, e4))
             return [[e1, e2], [e1, e3], [e1, e4],
-                    [e2, e3], [e2, e4], [e3, e4], 
+                    [e2, e3], [e2, e4], [e3, e4],
                     [-e1, -e2, -e3, -e4]]
 
         self.cell_constraints = []
         cnf_builder = [zero, one, two, three]
-        cell_id = 0
+        cell_id = -1
         for row in range(self.height):
             for col in range(self.width):
+                cell_id += 1
                 cell_value = self.cells[row][col]
+                assert cell_value in [None, 0, 1, 2, 3]
                 if cell_value is None:
                     pass
                 else:
+                    assert 0 <= cell_value <= 3 
                     e1, e2, e3, e4 = [1+e for e in self.get_cell_edges(cell_id)]
                     clauses = cnf_builder[cell_value](e1, e2, e3, e4)
                     self.cell_constraints += clauses
-                cell_id += 1
 
     def generate_loop_constraints(self):
         """
@@ -262,14 +271,14 @@ class Slitherlinky(object):
         """
         assert 0 <= cell_id < (self.height * self.width)
         # precomputation
-        cell_row = int(cell_id / self.width)
+        cell_row = cell_id // self.width
         cell_col = cell_id % self.width
-        num_horizontal = self.width * (self.height + 1)
+        num_horizontal = self.height * (self.width + 1)
         # horizontal edges
         upper_edge = cell_id
         lower_edge = upper_edge + self.width
         # vertical edges
-        left_edge = num_horizontal + ((cell_row * self.width) + cell_col)
+        left_edge = num_horizontal + ((cell_row * (self.width + 1)) + cell_col)
         right_edge = left_edge + 1
         return [upper_edge, lower_edge, left_edge, right_edge]
 
