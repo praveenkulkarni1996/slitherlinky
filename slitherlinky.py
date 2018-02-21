@@ -185,8 +185,11 @@ class Slitherlinky(object):
     def better_ranks_clauses(self):
         """
         About the ranks of a dot. 
-        If a dot has a rank better than k, then it has a rank better than
-        (k+1) ... n.
+        * Forward clauses: If a dot has a rank better than k, then it has a rank
+          better than k+1, k+2 ... num_dots.
+        * Backward clauses: If a dot doesn't have a rank better thank k, then it
+          doesn't have a rank better than 1, 2 ... k-1. But this is taken care
+          of in the forward clauses itself.
         """
         num_dots = (1 + self.height) * (1 + self.width)
         clauses = []
@@ -196,18 +199,63 @@ class Slitherlinky(object):
                     clauses += [[(dot, -rank), (dot, low_rank)]]
         return clauses
 
-    def better_neighbours_clauses(self):
+    def push_low_ranks(self):
         """
-        At least one of the neighbours has a better rank than the current dot.
+        Each neighbour should have the rank worse than the current one set.
         """
         num_dots = (1 + self.height) * (1 + self.width)
         clauses = []
         for dot in range(num_dots):
-            adj_dots = self.get_adjacent_dots(dot_id=dot)
-            for rank in range(2, num_dots + 1):
-                clause = [(dot, -rank)] + [(adot, rank-1) for adot in adj_dots]
-                clauses += [clause]
+            edges = self.get_corner_edges(dot)
+            ndots = [ndot
+                     for edge in edges
+                     for ndot in self.get_adjacent_dots(dot)
+                     if edge in self.get_corner_edges(ndot)]
+            for edge, ndot in zip(edges, ndots):
+                for rank in range(1, num_dots):
+                    clause = [-(edge+1), (dot, -rank), (ndot, rank+1)]
+                    clauses += [clause]
         return clauses
+
+    def pull_from_high_ranks(self):
+        """
+        Each dot can only have the ramks that are atleast one less than one of
+        it's neighbours which it is connected to.
+        """
+        num_dots = (1 + self.height) * (1 + self.width)
+        clauses = []
+        primitives = [
+            [0], [1], [2], [3],
+            [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3],
+            [0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3],
+            [0, 1, 2, 3]]
+        logged = False
+        for dot in range(num_dots):
+            for rank in range(2, num_dots + 1):
+                edges = self.get_corner_edges(dot)
+                ndots = [ndot
+                         for edge in edges
+                         for ndot in self.get_adjacent_dots(dot)
+                         if edge in self.get_corner_edges(ndot) and ndot != dot]
+                indices_set = [primitive 
+                               for primitive in primitives 
+                               if max(primitive) < len(ndots)]
+                assert len(ndots) in [2, 3, 4]
+                for indices in indices_set:
+                    not_indices = [index
+                                   for index in range(len(ndots))
+                                   if index not in indices]
+                    present_edges = [-(edges[index]+1) for index in indices]
+                    absent_edges = [edges[index]+1 for index in not_indices]
+                    rank_choices = [(ndots[index], rank-1) for index in indices]
+                    assert(len(present_edges) > 0)
+                    clause = [(dot, -rank)] + present_edges + absent_edges + rank_choices
+                    if not logged:
+                        logging.error((dot, clause))
+                    clauses += [clause]
+            logged = True
+        return clauses
+            
 
     def call_sat_solver(self):
         """
@@ -218,8 +266,8 @@ class Slitherlinky(object):
         new_clauses = []
         new_clauses += self.active_dots_ranked_clauses()
         new_clauses += self.unique_rank1_dot_clauses()
-        new_clauses += self.better_ranks_clauses()
-        new_clauses += self.better_neighbours_clauses()
+        new_clauses += self.push_low_ranks()
+        new_clauses += self.pull_from_high_ranks()
         self.dot_rank_to_int = {}
         dot_ranks = [(dot, rank)
                      for dot in range(num_dots)
@@ -237,7 +285,6 @@ class Slitherlinky(object):
                     terminal = sign * self.dot_rank_to_int[(a, abs(b))]
                 compiled_clause.append(terminal)
             compiled_clauses.append(compiled_clause)
-
         all_clauses = compiled_clauses + constraints
         self.solution = pycosat.solve(constraints + compiled_clauses)
 
@@ -249,10 +296,12 @@ class Slitherlinky(object):
         num_hori_edges = self.width * (self.height + 1)
         num_vert_edges = self.height * (self.width + 1) 
         num_edges = num_vert_edges + num_hori_edges
+        print(self.solution[:100])
+        exit()
         hori_edges = self.solution[:num_hori_edges]
         vert_edges = self.solution[num_hori_edges:num_edges]
-        print(list(filter(lambda x: x > 0, hori_edges)))
-        print(list(filter(lambda x: x > 0, vert_edges)))
+        # print(list(filter(lambda x: x > 0, hori_edges)))
+        # print(list(filter(lambda x: x > 0, vert_edges)))
 
     def get_cell_edges(self, cell_id):
         """
@@ -333,6 +382,7 @@ class Slitherlinky(object):
             if len(common_edges) > 0:
                 adjacent_dots.append(dot)
         return adjacent_dots
+
 
     def solve(self, input_filename):
         """ Runs solution pipeline. """
