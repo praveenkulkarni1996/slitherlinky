@@ -152,156 +152,15 @@ class Slitherlinky(object):
             clauses = constraint_fn[len(edges)](*edges)
             self.loop_constraints += clauses
 
-    def active_dots_ranked_clauses(self):
-        """ 
-        A dot has a rank iff it is part of an edge.
-        Forward clauses ensure that if there is an edge from a corner, then the
-        corner has a rank. Backward clauses ensure that if a corner has a rank,
-        then it has an edge present.
-        """
-        num_dots = (1 + self.height) * (1 + self.width)
-        forward_clauses = []
-        backward_clauses = []
-        for dot in range(num_dots):
-            adj_edges = self.get_corner_edges(dot)
-            for adj_edge in adj_edges:
-                forward_clauses += [[-(adj_edge+1), (dot, num_dots)]]
-            backward_clauses += [[(dot, -num_dots)] + [1+e for e in adj_edges]]
-        return forward_clauses + backward_clauses
-
-    def unique_rank1_dot_clauses(self):
-        """
-        There can only be a unique dot with a rank 1. Thus amongst any two dots
-        with at least one of them will not have rank 1. 
-        """
-        num_dots = (1 + self.height) * (1 + self.width)
-        unique_clauses = []
-        for dot1 in range(num_dots):
-            for dot2 in range(num_dots):
-                if dot1 != dot2:
-                    unique_clauses += [[(dot1, -1), (dot2, -1)]]
-        return unique_clauses
-
-    def better_ranks_clauses(self):
-        """
-        About the ranks of a dot. 
-        * Forward clauses: If a dot has a rank better than k, then it has a rank
-          better than k+1, k+2 ... num_dots.
-        * Backward clauses: If a dot doesn't have a rank better thank k, then it
-          doesn't have a rank better than 1, 2 ... k-1. But this is taken care
-          of in the forward clauses itself.
-        """
-        num_dots = (1 + self.height) * (1 + self.width)
-        clauses = []
-        for dot in range(num_dots):
-            for rank in range(1, num_dots + 1):
-                for low_rank in range(rank + 1, num_dots + 1):
-                    clauses += [[(dot, -rank), (dot, low_rank)]]
-        return clauses
-
-    def push_low_ranks(self):
-        """
-        Each neighbour should have the rank worse than the current one set.
-        """
-        num_dots = (1 + self.height) * (1 + self.width)
-        clauses = []
-        for dot in range(num_dots):
-            edges = self.get_corner_edges(dot)
-            ndots = [ndot
-                     for edge in edges
-                     for ndot in self.get_adjacent_dots(dot)
-                     if edge in self.get_corner_edges(ndot)]
-            for edge, ndot in zip(edges, ndots):
-                for rank in range(1, num_dots):
-                    clause = [-(edge+1), (dot, -rank), (ndot, rank+1)]
-                    clauses += [clause]
-        return clauses
-
-    def pull_from_high_ranks(self):
-        """
-        Each dot can only have the ramks that are atleast one less than one of
-        it's neighbours which it is connected to.
-        """
-        num_dots = (1 + self.height) * (1 + self.width)
-        clauses = []
-        primitives = [
-            [0], [1], [2], [3],
-            [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3],
-            [0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3],
-            [0, 1, 2, 3]]
-        logged = False
-        for dot in range(num_dots):
-            for rank in range(2, num_dots + 1):
-                edges = self.get_corner_edges(dot)
-                ndots = [ndot
-                         for edge in edges
-                         for ndot in self.get_adjacent_dots(dot)
-                         if edge in self.get_corner_edges(ndot) and ndot != dot]
-                indices_set = [primitive 
-                               for primitive in primitives 
-                               if max(primitive) < len(ndots)]
-                assert len(ndots) in [2, 3, 4]
-                for indices in indices_set:
-                    not_indices = [index
-                                   for index in range(len(ndots))
-                                   if index not in indices]
-                    present_edges = [-(edges[index]+1) for index in indices]
-                    absent_edges = [edges[index]+1 for index in not_indices]
-                    rank_choices = [(ndots[index], rank-1) for index in indices]
-                    assert(len(present_edges) > 0)
-                    clause = [(dot, -rank)] + present_edges + absent_edges + rank_choices
-                    if not logged:
-                        logging.error((dot, clause))
-                    clauses += [clause]
-            logged = True
-        return clauses
-            
-
     def call_sat_solver(self):
         """
         Moves the variables and constraints to the SAT solver.
         """
         num_dots = (1 + self.height) * (1 + self.width)
         constraints = self.cell_constraints + self.loop_constraints
-        new_clauses = []
-        new_clauses += self.active_dots_ranked_clauses()
-        new_clauses += self.unique_rank1_dot_clauses()
-        new_clauses += self.push_low_ranks()
-        new_clauses += self.pull_from_high_ranks()
-        self.dot_rank_to_int = {}
-        dot_ranks = [(dot, rank)
-                     for dot in range(num_dots)
-                     for rank in range(1, num_dots + 1)]
-        for i, dot_rank in enumerate(dot_ranks):
-            index = 1 + i + self.num_edges
-            self.dot_rank_to_int[dot_rank] = index
-        compiled_clauses = []
-        for clause in new_clauses:
-            compiled_clause = []
-            for terminal in clause:
-                if type(terminal) is tuple:
-                    a, b = terminal
-                    sign = b // abs(b)
-                    terminal = sign * self.dot_rank_to_int[(a, abs(b))]
-                compiled_clause.append(terminal)
-            compiled_clauses.append(compiled_clause)
-        all_clauses = compiled_clauses + constraints
-        self.solution = pycosat.solve(constraints + compiled_clauses)
-
-    def interpret_solution(self):
-        """
-        Interprets the SAT output (= boolean variables) and generates a
-        solution.
-        """
-        num_hori_edges = self.width * (self.height + 1)
-        num_vert_edges = self.height * (self.width + 1) 
-        num_edges = num_vert_edges + num_hori_edges
-        print(self.solution[:100])
+        for solution in pycosat.itersolve(constraints):
+            print([edge for edge in solution if edge > 0])
         exit()
-        hori_edges = self.solution[:num_hori_edges]
-        vert_edges = self.solution[num_hori_edges:num_edges]
-        # print(list(filter(lambda x: x > 0, hori_edges)))
-        # print(list(filter(lambda x: x > 0, vert_edges)))
 
     def get_cell_edges(self, cell_id):
         """
@@ -320,7 +179,6 @@ class Slitherlinky(object):
         left_edge = num_horizontal + ((cell_row * (self.width + 1)) + cell_col)
         right_edge = left_edge + 1
         return [upper_edge, lower_edge, left_edge, right_edge]
-
 
     def get_corner_edges(self, corner_id):
         """
