@@ -159,8 +159,12 @@ class Slitherlinky(object):
         num_dots = (1 + self.height) * (1 + self.width)
         constraints = self.cell_constraints + self.loop_constraints
         for solution in pycosat.itersolve(constraints):
-            print([edge for edge in solution if edge > 0])
-        exit()
+            test_solution = [edge for edge in solution if edge > 0]
+            result = self.validate(test_solution)
+            if result:
+                self.solution = test_solution
+                break
+        print(self.solution)
 
     def get_cell_edges(self, cell_id):
         """
@@ -241,15 +245,29 @@ class Slitherlinky(object):
                 adjacent_dots.append(dot)
         return adjacent_dots
 
-
     def solve(self, input_filename):
         """ Runs solution pipeline. """
         self.read_puzzle(filename=input_filename)
         self.generate_cell_constraints()
         self.generate_loop_constraints()
         self.call_sat_solver()
-        self.interpret_solution()
 
+    def validate(self, solution):
+        """ Validates that the generated solution has a single loop """
+        if solution is []: return False
+        solution = [edge - 1 for edge in solution]
+        far_edges = solution[1:]
+        start = [solution[0]]
+        while far_edges != []:
+            nbrs = [nbr
+                    for edge in start
+                    for nbr in self.get_adjacent_edges(edge)
+                    if nbr in far_edges]
+            if nbrs == [] and far_edges != []:
+                return False
+            far_edges = [edge for edge in far_edges if edge not in nbrs]
+            start = nbrs
+        return True
 
 
 if __name__ == '__main__':
