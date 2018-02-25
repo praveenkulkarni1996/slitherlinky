@@ -59,8 +59,11 @@ There are two kinds of variables that are needed to express this problem.
 ### Prerequisites
 Slitherlink is written in Python3. It also requires a [pycosat], a SAT solver.
 pycosat can be installed using pip or conda.
-``` pip install pycosat ```
-``` conda install pycosat ```
+
+``` 
+pip install pycosat
+conda install pycosat 
+```
 
 ### Installing
 
