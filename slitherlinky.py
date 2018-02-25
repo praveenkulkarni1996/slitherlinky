@@ -272,4 +272,7 @@ class Slitherlinky(object):
 
 if __name__ == '__main__':
     slither = Slitherlinky()
-    slither.solve(input_filename='tests/mod1.txt')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename')
+    args = parser.parse_args()
+    slither.solve(input_filename=args.filename)
