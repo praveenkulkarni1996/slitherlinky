@@ -33,8 +33,6 @@ class Slitherlinky(object):
         self.width = len(self.cells[0])
         self.height = len(self.cells)
         self.num_edges = 2*self.width*self.height + self.width + self.height
-        pprint.pprint(self.cells)
-        print()
 
     def generate_cell_constraints(self):
         """
@@ -163,7 +161,6 @@ class Slitherlinky(object):
             if result:
                 self.solution = test_solution
                 break
-        print(self.solution)
 
     def get_cell_edges(self, cell_id):
         """

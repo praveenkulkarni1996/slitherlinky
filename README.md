@@ -65,32 +65,28 @@ pip install pycosat
 conda install pycosat 
 ```
 
-### Installing
-
-
 ## Running the tests
 
 The test problems can be found in the ```tests/``` directory.
 
 ```
-python3 slitherlinky.py tests/55easy1.txt
+python3 slitherlinky.py -f tests/55easy1.txt
+python3 slitherlinky.py -f tests/55easy2.txt
+python3 slitherlinky.py -f tests/55hard1.txt
+python3 slitherlinky.py -f tests/55hard2.txt
 ```
-
 
 ## Author
 
-I wrote this to kill boredom on a dull Saturday. [Website]
+I wrote this to kill boredom on a dull Saturday. I love [here] on the internet.
 
 ## License
 
 This project is licensed under the MIT License - see the
 [LICENSE.md](LICENSE.md) file for details
 
-### Todo
-Finish the README.  Add the code.
-
 [Wikipedia]: https://en.wikipedia.org/wiki/Slitherlink
 [example_puzzle]: assets/main.png "Example puzzle"
 [example_solution]: assets/main_solution.png "Solution"
-[Website]:http://www.cse.iitd.ac.in/~cs5140599/
+[here]:http://www.cse.iitd.ac.in/~cs5140599/
 [pycosat]: https://github.com/ContinuumIO/pycosat
