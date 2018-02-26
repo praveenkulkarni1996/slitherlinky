@@ -12,6 +12,7 @@ import pycosat
 import pprint
 import logging
 
+
 class Slitherlinky(object):
     """ Describes a puzzle and any partial solutions """
 
@@ -27,8 +28,8 @@ class Slitherlinky(object):
         """ reads a puzzle from a file """
         with open(filename) as fin:
             self.cells = [[None if char == '.' else int(char)
-                           for char in line.strip()]
-                           for line in fin]
+                          for char in line.strip()]
+                          for line in fin]
         self.width = len(self.cells[0])
         self.height = len(self.cells)
         self.num_edges = 2*self.width*self.height + self.width + self.height
@@ -44,7 +45,7 @@ class Slitherlinky(object):
         This updates the self.cell_constraints, and has no other side effects.
         """
         def zero(e1, e2, e3, e4):
-            """ 
+            """
             All e1, e2, e3 and e4 must be false.
             """
             logging.debug('zero({}, {}, {}, {})'.format(e1, e2, e3, e4))
@@ -52,31 +53,30 @@ class Slitherlinky(object):
 
         def one(e1, e2, e3, e4):
             """
-            Amongst any two of booleans, at least one must be false. This
-            ensures that atmost one of the booleans is true. 
-            Also add a clause that ensures at least one of the booleans is true.
-            Together they ensure the "exactly one constraint".
+            The "exactly one" constraint can be expressed as
+            * Amongst any two of booleans, at least one must be false.
+            * Atleast one of the booleans is true.
             """
             logging.debug('one({}, {}, {}, {})'.format(e1, e2, e3, e4))
             return [[-e1, -e2], [-e1, -e3], [-e1, -e4],
-                    [-e2, -e3], [-e2, -e4], [-e3, -e4], 
+                    [-e2, -e3], [-e2, -e4], [-e3, -e4],
                     [e1, e2, e3, e4]]
 
         def two(e1, e2, e3, e4):
             """
-            Amongst any three booleans, at least one must be true, 
+            Amongst any three booleans, at least one must be true,
             and atleast one must be false.
             """
             logging.debug('two({}, {}, {}, {})'.format(e1, e2, e3, e4))
-            return [[e2, e3, e4], [e1, e3, e4], 
+            return [[e2, e3, e4], [e1, e3, e4],
                     [e1, e2, e4], [e1, e2, e3],
-                    [-e2, -e3, -e4], [-e1, -e3, -e4], 
-                    [-e1, -e2, -e4], [-e1, -e2, -e3]] 
+                    [-e2, -e3, -e4], [-e1, -e3, -e4],
+                    [-e1, -e2, -e4], [-e1, -e2, -e3]]
 
         def three(e1, e2, e3, e4):
             """
             Amongst any two booleans, at least one must be true. This ensures
-            that there are at least three true booleans. 
+            that there are at least three true booleans.
             Also add a clause that ensures at least one of them must be false.
             Together they ensure the "exactly three correct"
             """
@@ -96,9 +96,9 @@ class Slitherlinky(object):
                 if cell_value is None:
                     pass
                 else:
-                    assert 0 <= cell_value <= 3 
-                    e1, e2, e3, e4 = [1+e for e in self.get_cell_edges(cell_id)]
-                    clauses = cnf_builder[cell_value](e1, e2, e3, e4)
+                    assert 0 <= cell_value <= 3
+                    edges = [1+e for e in self.get_cell_edges(cell_id)]
+                    clauses = cnf_builder[cell_value](*edges)
                     self.cell_constraints += clauses
 
     def generate_loop_constraints(self):
@@ -116,25 +116,24 @@ class Slitherlinky(object):
             """
             return [[-e1, e2], [e1, -e2]]
 
-
         def three(e1, e2, e3):
             """
             If there are three edges at a corner, then exactly two of them are
             true, or none of them are.
             * Having two edges implies the other isn't.
-            * Having one of the edges implies one of the other is. 
+            * Having one of the edges implies one of the other is.
             """
             return [[-e1, -e2, -e3],
-                    [-e1, e2, e3], 
+                    [-e1, e2, e3],
                     [e1, -e2, e3],
                     [e1, e2, -e3]]
 
         def four(e1, e2, e3, e4):
             """
             If there are four edges at a corner, then exactly two of them are
-            true, or none of them are. 
-            * Having one edge implies one of the other is an edge. 
-            * Having two edges imples the other two aren't an edge. 
+            true, or none of them are.
+            * Having one edge implies one of the other is an edge.
+            * Having two edges imples the other two aren't an edge.
             """
             return [[-e1, e2, e3, e4],
                     [e1, -e2, e3, e4],
@@ -215,7 +214,7 @@ class Slitherlinky(object):
         """
         Returns a list of upto 6 edges that are adjacent to edge_id.
         """
-        vert_edges = self.height * (self.width + 1) 
+        vert_edges = self.height * (self.width + 1)
         hori_edges = self.width * (self.height + 1)
         num_edges = vert_edges + hori_edges
         num_corners = (self.width + 1) * (self.height + 1)
@@ -254,7 +253,8 @@ class Slitherlinky(object):
 
     def validate(self, solution):
         """ Validates that the generated solution has a single loop """
-        if solution is []: return False
+        if solution is []:
+            return False
         solution = [edge - 1 for edge in solution]
         far_edges = solution[1:]
         start = [solution[0]]
