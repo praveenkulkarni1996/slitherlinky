@@ -70,23 +70,12 @@ conda install pycosat
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
+The test problems can be found in the ```tests/``` directory.
 
 ```
-Give an example
+python3 slitherlinky.py tests/55easy1.txt
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
 
 ## Author
 
