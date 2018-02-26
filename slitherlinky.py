@@ -250,6 +250,7 @@ class Slitherlinky(object):
         self.generate_cell_constraints()
         self.generate_loop_constraints()
         self.call_sat_solver()
+        self.draw_solution()
 
     def validate(self, solution):
         """ Validates that the generated solution has a single loop """
@@ -269,10 +270,64 @@ class Slitherlinky(object):
             start = nbrs
         return True
 
+    def draw_solution(self):
+        """ Draws the solution in ASCII-art. """
+        num_row = 4 * (self.height + 1) + 1
+        num_col = 4 * (self.width + 1) + 1
+        g = [[' ' for cols in range(num_col)] for rows in range(num_row)]
+
+        def horizontal_edge(edge):
+            """ Draw a horizontal edge on the grid. """
+            col_f = edge % self.width
+            row_l = edge // self.width
+            y = 4 * row_l
+            x1 = 4 * col_f
+            x2 = 4 * (col_f + 1)
+            for x in range(x1, x2+1):
+                g[y][x] = '#'
+
+        def vertical_edge(edge):
+            """ Draw a vertical edge on the grid. """
+            row_f = edge // (self.width + 1)
+            col_l = edge % (self.width + 1)
+            y1 = 4 * row_f
+            y2 = 4 * (row_f + 1)
+            x = 4 * col_l
+            for y in range(y1, y2+1):
+                g[y][x] = '#'
+
+        def draw_numbers():
+            for row_index, row in enumerate(self.cells):
+                for col_index, val in enumerate(row):
+                    if val is not None:
+                        y = 4 * row_index + 2
+                        x = 4 * col_index + 2
+                        g[y][x] = str(val)
+
+        draw_numbers()
+        horizontal_limit = self.height * (self.width + 1)
+        horizontals = [e - 1
+                       for e in self.solution
+                       if e <= horizontal_limit]
+        verticals = [e - horizontal_limit - 1
+                     for e in self.solution
+                     if e > horizontal_limit]
+        for h_edge in horizontals:
+            horizontal_edge(edge=h_edge)
+        for v_edge in verticals:
+            vertical_edge(edge=v_edge)
+        gs = '\n'.join([''.join(g_row) for g_row in g])
+        print(gs)
 
 if __name__ == '__main__':
     slither = Slitherlinky()
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename')
+    parser.add_argument('-f', '--filename', 
+            help='Specify input filename. By default reads interactively',
+            default=None)
     args = parser.parse_args()
-    slither.solve(input_filename=args.filename)
+    if args.filename is not None:
+        slither.solve(input_filename=args.filename)
+    else:
+        print('INTERACTIVE MODE!!!!')
+        raise NotImplementedError
