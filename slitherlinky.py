@@ -9,7 +9,6 @@ License:    MIT
 
 import argparse
 import pycosat
-import pprint
 import logging
 
 
@@ -20,7 +19,6 @@ class Slitherlinky(object):
         self.cells = None
         self.height = None
         self.width = None
-        self.num_edges = None
         self.cell_constraints = []
         self.loop_constraints = []
 
@@ -32,7 +30,6 @@ class Slitherlinky(object):
                           for line in fin]
         self.width = len(self.cells[0])
         self.height = len(self.cells)
-        self.num_edges = 2*self.width*self.height + self.width + self.height
 
     def generate_cell_constraints(self):
         """
@@ -241,9 +238,10 @@ class Slitherlinky(object):
                 adjacent_dots.append(dot)
         return adjacent_dots
 
-    def solve(self, input_filename):
+    def solve(self, input_filename=None):
         """ Runs solution pipeline. """
-        self.read_puzzle(filename=input_filename)
+        if input_filename is not None:
+            self.read_puzzle(filename=input_filename)
         self.generate_cell_constraints()
         self.generate_loop_constraints()
         self.call_sat_solver()
@@ -316,15 +314,37 @@ class Slitherlinky(object):
         gs = '\n'.join([''.join(g_row) for g_row in g])
         print(gs)
 
+
+def interactive_mode(row, col):
+    cells = []
+    for row_index in range(row):
+        row_list = [int(char) if char.isdigit() else None
+                    for char in list(input())]
+        if len(row_list) != col:
+            raise IOError('column length exceeds {}'.format(col))
+        cells.append(row_list)
+    return cells
+
+
 if __name__ == '__main__':
-    slither = Slitherlinky()
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--filename', 
-            help='Specify input filename. By default reads interactively',
-            default=None)
+    parser.add_argument('-f', '--file', 
+            help='Specify input filename. By default reads interactively')
+    parser.add_argument('-r', '--row',
+            help='Number of rows in grid for interactive mode.',
+            type=int)
+    parser.add_argument('-c', '--col',
+            help='Number of columns in grid for interactive mode.',
+            type=int)
     args = parser.parse_args()
-    if args.filename is not None:
+    slither = Slitherlinky()
+    if args.file is not None:
         slither.solve(input_filename=args.filename)
     else:
-        print('INTERACTIVE MODE!!!!')
-        raise NotImplementedError
+        if args.row is None or args.col is None:
+            raise IOError('row and col must be specified in interactive mode')
+        cells = interactive_mode(args.row, args.col)
+        slither.cells = cells
+        slither.height = row
+        slither.width = col
+        slither.solve()
