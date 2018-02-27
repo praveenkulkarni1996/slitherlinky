@@ -18,6 +18,8 @@ of its four sides are segments in the loop.
 
 ![Example puzzle][example_puzzle] ................ ![Solution][example_solution]
 
+![GIF][gif]
+
 ### SAT queries
 
 There are three constraints in Slitherlink that need to be expressed to the SAT
@@ -78,7 +80,7 @@ python3 slitherlinky.py -f tests/55hard2.txt
 
 ## Author
 
-I wrote this to kill boredom on a dull Saturday. I love [here] on the internet.
+I wrote this to kill boredom on a dull Saturday. I live [here] on the internet.
 
 ## License
 
@@ -88,5 +90,6 @@ This project is licensed under the MIT License - see the
 [Wikipedia]: https://en.wikipedia.org/wiki/Slitherlink
 [example_puzzle]: assets/main.png "Example puzzle"
 [example_solution]: assets/main_solution.png "Solution"
+[gif]:assets/slitherlinky.gif "Slitherlinky GIF"
 [here]:http://www.cse.iitd.ac.in/~cs5140599/
 [pycosat]: https://github.com/ContinuumIO/pycosat
