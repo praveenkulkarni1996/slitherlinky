@@ -345,6 +345,6 @@ if __name__ == '__main__':
             raise IOError('row and col must be specified in interactive mode')
         cells = interactive_mode(args.row, args.col)
         slither.cells = cells
-        slither.height = row
-        slither.width = col
+        slither.height = args.row
+        slither.width = args.col
         slither.solve()
