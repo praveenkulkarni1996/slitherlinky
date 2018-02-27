@@ -18,6 +18,9 @@ of its four sides are segments in the loop.
 
 ![Example puzzle][example_puzzle] ................ ![Solution][example_solution]
 
+
+### Demo
+
 ![GIF][gif]
 
 ### SAT queries
