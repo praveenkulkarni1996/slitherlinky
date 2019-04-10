@@ -339,7 +339,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     slither = Slitherlinky()
     if args.file is not None:
-        slither.solve(input_filename=args.filename)
+        slither.solve(input_filename=args.file)
     else:
         if args.row is None or args.col is None:
             raise IOError('row and col must be specified in interactive mode')
