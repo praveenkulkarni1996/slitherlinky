@@ -146,18 +146,23 @@ class Slitherlinky(object):
             clauses = constraint_fn[len(edges)](*edges)
             self.loop_constraints += clauses
 
-    def call_sat_solver(self):
+    def call_sat_solver(self, verify=False):
         """
         Moves the variables and constraints to the SAT solver.
         """
         num_dots = (1 + self.height) * (1 + self.width)
         constraints = self.cell_constraints + self.loop_constraints
+        count = 0
         for solution in pycosat.itersolve(constraints):
             test_solution = [edge for edge in solution if edge > 0]
             result = self.validate(test_solution)
             if result:
                 self.solution = test_solution
-                break
+                count += 1
+                if not verify:
+                    break
+                if count > 1:
+                    raise Exception("multiple solutions")
 
     def get_cell_edges(self, cell_id):
         """
@@ -238,13 +243,13 @@ class Slitherlinky(object):
                 adjacent_dots.append(dot)
         return adjacent_dots
 
-    def solve(self, input_filename=None):
+    def solve(self, input_filename=None, verify=False):
         """ Runs solution pipeline. """
         if input_filename is not None:
             self.read_puzzle(filename=input_filename)
         self.generate_cell_constraints()
         self.generate_loop_constraints()
-        self.call_sat_solver()
+        self.call_sat_solver(verify=verify)
         self.draw_solution()
 
     def validate(self, solution):
@@ -336,10 +341,13 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--col',
             help='Number of columns in grid for interactive mode.',
             type=int)
+    parser.add_argument('-v', '--verify',
+            help='Verify that there is only one solution.',
+            action='store_true')
     args = parser.parse_args()
     slither = Slitherlinky()
     if args.file is not None:
-        slither.solve(input_filename=args.file)
+        slither.solve(input_filename=args.file, verify=args.verify)
     else:
         if args.row is None or args.col is None:
             raise IOError('row and col must be specified in interactive mode')
