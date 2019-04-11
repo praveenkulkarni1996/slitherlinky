@@ -249,7 +249,7 @@ class Slitherlinky(object):
 
     def validate(self, solution):
         """ Validates that the generated solution has a single loop """
-        if solution is []:
+        if len(solution) == 0:
             return False
         solution = [edge - 1 for edge in solution]
         far_edges = solution[1:]
